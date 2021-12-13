@@ -1,0 +1,262 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?include Variables.wxi ?>
+<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi" xmlns:netfx="http://schemas.microsoft.com/wix/NetFxExtension">
+  <!--http://wix.tramontana.co.hu/tutorial/user-interface-revisited/is-this-progress-->
+  <!--http://wixtoolset.org/documentation/manual/v3/howtos/redistributables_and_install_checks/check_for_dotnet.html-->
+  <!--http://stackoverflow.com/questions/16302626/how-can-i-check-net-framework-4-5-prerequestics-in-wix-->
+  <Product Id="*" Name="$(var.ProductName)" Language="1033" Version="$(var.Version)" Manufacturer="$(var.Manufacturer)" UpgradeCode="BFBD3B45-9713-43C9-B6D9-3EED5B979BC2">
+
+    <Package Manufacturer="SWI" InstallerVersion="200" Compressed="yes" Languages="1033" InstallScope="perMachine" InstallPrivileges="elevated"/>
+
+    <MajorUpgrade DowngradeErrorMessage="A newer version of [ProductName] is already installed."/>
+	 
+    <MediaTemplate EmbedCab="yes"/>
+
+    <Feature Id="ProductFeature" Title="$(var.Title)" Level="1">
+      <ComponentGroupRef Id="ProductComponents" />
+    </Feature>
+
+    <PropertyRef Id="NETFRAMEWORK40FULL"/>
+    <PropertyRef Id="NETFRAMEWORK45"/>
+    <Property Id="REINSTALLMODE" Value="amus" />
+
+    <Condition Message='This setup requires Microsoft .NET Framework 4.0 Full or 4.5 package or greater needs to be installed for this installation to continue.'>
+      <![CDATA[Installed OR NETFRAMEWORK40FULL OR NETFRAMEWORK45]]>
+    </Condition>
+
+    <Property Id="SETTINGSUSERID"></Property>
+
+    <UI>
+      <Property Id="DefaultUIFont">DlgFont8</Property>
+      <Property Id="Setup">Setup</Property>
+      <Property Id="ButtonText_No">&amp;No</Property>
+      <Property Id="ButtonText_Yes">&amp;Yes</Property>
+      <Property Id="ButtonText_Install">&amp;Install</Property>
+      <Property Id="ButtonText_Cancel">Cancel</Property>
+      <Property Id="Wizard">Setup Wizard</Property>
+      <Property Id="ButtonText_Back">&lt; &amp;Back</Property>
+      <Property Id="ButtonText_Next">&amp;Next &gt;</Property>
+      <Property Id="ButtonText_Test">Test</Property>
+
+      <Property Id="ServiceAddress" Value="$(var.ServiceAddress)"/>
+      <Property Id="CheckActionMessage"></Property>
+      <Property Id="USERIDCHECKED">0</Property>
+      <Property Id="GUIDTemplate" Hidden="yes">
+        <![CDATA[<????????-????-????-????-????????????>]]>
+      </Property>
+
+      <Dialog Id="CheckDlg" Width="370" Height="270" Title="[ProductName] $(var.Version) [Setup]" NoMinimize="yes">
+
+        <Control Id="Description" Type="Text" X="25" Y="23" Width="280" Height="15" Transparent="yes" NoPrefix="yes">
+          <Text>The [Wizard] is ready to begin the checking</Text>
+        </Control>
+        <Control Id="DescriptionUserId" Type="Text" X="20" Y="70" Width="320" Height="20" Text="Your id:" />
+        <Control Id="UserId" Type="MaskedEdit" Text="[GUIDTemplate]"  X="20" Y="100" Width="320" Height="20" Property="SETTINGSUSERID" Indirect="no"/>
+
+        <Control Id="Cancel" Type="PushButton" X="304" Y="243" Width="56" Height="17" Cancel="yes" Text="[ButtonText_Cancel]">
+          <Publish Event="SpawnDialog" Value="CancelDlg1">1</Publish>
+        </Control>
+
+        <Control Id="TestUserId" Type="PushButton" X="236" Y="243" Width="56" Height="17" Default="yes" Text="[ButtonText_Next]">
+          <Publish Event="DoAction" Value="CheckAction" Order="1">1</Publish>
+          <Publish Event="SpawnDialog" Value="InvalidUserIdDlg" Order="2">USERIDCHECKED= "1"</Publish>
+          <Publish Event="NewDialog" Value="InstallDlg" Order="3">USERIDCHECKED= "0"</Publish>
+          <Publish Event="SpawnDialog" Value="InvalidServiceDlg" Order="4">USERIDCHECKED= "2"</Publish>
+          <Publish Event="SpawnDialog" Value="NoMoreInstallationsDlg" Order="4">USERIDCHECKED= "22"</Publish>
+        </Control>
+
+        <Control Id="BottomLine" Type="Line" X="0" Y="234" Width="370" Height="0" />
+        <Control Id="Title" Type="Text" X="15" Y="6" Width="200" Height="15" Transparent="yes" NoPrefix="yes">
+          <Text>{\DlgTitleFont}Check your organization Id</Text>
+        </Control>
+        <Control Id="BannerLine" Type="Line" X="0" Y="44" Width="370" Height="0" />
+      </Dialog>
+
+      <Dialog Id="InstallDlg" Width="370" Height="270" Title="[ProductName] [Setup]" NoMinimize="yes">
+        <Control Id="Install" Type="PushButton" X="236" Y="243" Width="56" Height="17" Default="yes" Text="[ButtonText_Install]">
+          <Publish Event="NewDialog" Value="ProgressDlg1" />
+        </Control>
+        <Control Id="Cancel" Type="PushButton" X="304" Y="243" Width="56" Height="17" Cancel="yes" Text="[ButtonText_Cancel]">
+          <Publish Event="SpawnDialog" Value="CancelDlg1">1</Publish>
+        </Control>
+        <Control Id="Description" Type="Text" X="25" Y="23" Width="280" Height="15" Transparent="yes" NoPrefix="yes">
+          <Text>The [Wizard] is ready to begin the installation</Text>
+        </Control>
+        <Control Id="Text" Type="Text" X="25" Y="70" Width="320" Height="20">
+          <Text>Click Install to begin the installation.</Text>
+        </Control>
+        <Control Id="BottomLine" Type="Line" X="0" Y="234" Width="370" Height="0" />
+        <Control Id="Title" Type="Text" X="15" Y="6" Width="200" Height="15" Transparent="yes" NoPrefix="yes">
+          <Text>{\DlgTitleFont}Ready to Install</Text>
+        </Control>
+        <Control Id="BannerLine" Type="Line" X="0" Y="44" Width="370" Height="0" />
+      </Dialog>
+
+      <Dialog Id="CancelDlg1" Width="260" Height="85" Title="[ProductName] [Setup]" NoMinimize="yes">
+        <Control Id="No" Type="PushButton" X="132" Y="57" Width="56" Height="17" Default="yes" Cancel="yes" Text="[ButtonText_No]">
+          <Publish Event="EndDialog" Value="Return">1</Publish>
+        </Control>
+        <Control Id="Yes" Type="PushButton" X="72" Y="57" Width="56" Height="17" Text="[ButtonText_Yes]">
+          <Publish Event="EndDialog" Value="Exit">1</Publish>
+        </Control>
+        <Control Id="Text" Type="Text" X="48" Y="15" Width="194" Height="30">
+          <Text>Are you sure you want to cancel [ProductName] installation?</Text>
+        </Control>
+      </Dialog>
+
+      <Dialog Id="ProgressDlg1" Width="370" Height="270" Title="[ProductName] [Setup]" Modeless="yes">
+        <Control Id="Cancel" Type="PushButton" X="304" Y="243" Width="56" Height="17" Default="yes" Cancel="yes" Text="[ButtonText_Cancel]">
+          <Publish Event="SpawnDialog" Value="CancelDlg1">1</Publish>
+        </Control>
+        <Control Id="Back" Type="PushButton" X="180" Y="243" Width="56" Height="17" Disabled="yes" Text="[ButtonText_Back]" />
+        <Control Id="Next" Type="PushButton" X="236" Y="243" Width="56" Height="17" Disabled="yes" Text="[ButtonText_Next]" />
+        <Control Id="ActionText" Type="Text" X="70" Y="100" Width="265" Height="10">
+          <Subscribe Event="ActionText" Attribute="Text" />
+        </Control>
+        <Control Id="Text" Type="Text" X="35" Y="65" Width="300" Height="20">
+          <Text>Please wait while the [Wizard] install [ProductName]. This may take several minutes.</Text>
+        </Control>
+        <Control Id="BottomLine" Type="Line" X="0" Y="234" Width="370" Height="0" />
+        <Control Id="Title" Type="Text" X="20" Y="15" Width="200" Height="15" Transparent="yes" NoPrefix="yes">
+          <Text>{\DlgTitleFont}[Progress1] [ProductName]</Text>
+        </Control>
+        <Control Id="BannerLine" Type="Line" X="0" Y="44" Width="370" Height="0" />
+        <Control Id="ProgressBar" Type="ProgressBar" X="35" Y="115" Width="300" Height="10" ProgressBlocks="yes" Text="Progress done">
+          <Subscribe Event="SetProgress" Attribute="Progress" />
+        </Control>
+        <Control Id="StatusLabel" Type="Text" X="35" Y="100" Width="35" Height="10" Text="Status:" />
+      </Dialog>
+
+		<Dialog Id="ExitDlg" Width="370" Height="270" Title="[ProductName] [Setup]">
+
+			<Control Id="Description" Type="Text" X="50" Y="70" Width="220" Height="80" Text="[ProductName] setup has completed successfully. Click 'Finish' to exit the [Wizard]." />
+			<Control Id="Finish" Type="PushButton" X="180" Y="243" Width="56" Height="17" Default="yes" Cancel="yes" Text="Finish">
+				<Publish Event="EndDialog" Value="Exit" />
+			</Control>
+		</Dialog>
+
+		<Dialog Id="FatalErrorDlg" Width="370" Height="270" Title="[ProductName] [Setup]">
+			<Control Id="Description" Type="Text" X="50" Y="70" Width="220" Height="80"
+					 Text="[ProductName] [Wizard] ended
+                              prematurely because of an error. Your system
+                              has not been modified. To install this
+                              program at a later time, run Setup Wizard
+                              again." />
+			<Control Id="Finish" Type="PushButton" X="180" Y="243" Width="56" Height="17" Default="yes" Cancel="yes" Text="Finish">
+				<Publish Event="EndDialog" Value="Exit" />
+			</Control>
+		</Dialog>
+		
+      <Dialog Id="InvalidUserIdDlg" Width="260" Height="85" Title="[ProductName] Setup" NoMinimize="yes">
+        <Control Id="Return" Type="PushButton" X="100" Y="57" Width="56" Height="17" Default="yes" Cancel="yes" Text="&amp;Return">
+          <Publish Event="EndDialog" Value="Return">1</Publish>
+        </Control>
+        <Control Id="Text" Type="Text" X="48" Y="15" Width="194" Height="30" TabSkip="no">
+          <Text>
+            The user key you entered is invalid.
+          </Text>
+        </Control>
+      </Dialog>
+
+      <Dialog Id="NoMoreInstallationsDlg" Width="260" Height="85" Title="[ProductName] Setup" NoMinimize="yes">
+        <Control Id="Return" Type="PushButton" X="100" Y="57" Width="56" Height="17" Default="yes" Cancel="yes" Text="&amp;Return">
+          <Publish Event="EndDialog" Value="Return">1</Publish>
+        </Control>
+        <Control Id="Text" Type="Text" X="48" Y="15" Width="194" Height="30" TabSkip="no">
+          <Text>
+            No more available machine registrations.
+          </Text>
+        </Control>
+      </Dialog>
+      
+      <Dialog Id="InvalidServiceDlg" Width="260" Height="85" Title="[ProductName] Setup" NoMinimize="yes">
+        <Control Id="Return" Type="PushButton" X="100" Y="57" Width="56" Height="17" Default="yes" Cancel="yes" Text="&amp;Return">
+          <Publish Event="EndDialog" Value="Return">1</Publish>
+        </Control>
+        <Control Id="Text" Type="Text" X="48" Y="15" Width="194" Height="30" TabSkip="no">
+          <Text>
+            Cannot access service. Check network connection
+          </Text>
+        </Control>
+      </Dialog>
+
+      <TextStyle Id="DlgFont8" FaceName="Tahoma" Size="8" />
+      <TextStyle Id="DlgTitleFont" FaceName="Tahoma" Size="8" Bold="yes" />
+
+      <InstallUISequence>
+        <Show Dialog="CheckDlg" After="MigrateFeatureStates">NOT Installed</Show>
+		<Show Dialog="ExitDlg" OnExit="success" />
+		<Show Dialog="FatalErrorDlg" OnExit="error" />
+      </InstallUISequence>
+
+    </UI>
+	
+    <Binary Id="CheckDLL" SourceFile="..\SWI.SoftStock.Client.CustomActions\bin\$(var.Configuration)\SWI.SoftStock.Client.CustomActions.CA.dll" />
+    <CustomAction Id="CheckAction" BinaryKey="CheckDLL" DllEntry="CheckAction"/>
+	
+	<CustomAction Id="SetCompanyUniqueIdActionParams" Property="SetCompanyUniqueIdAction" Value="SETTINGSUSERID=[SETTINGSUSERID]"/>
+    <CustomAction Id="SetCompanyUniqueIdAction"  BinaryKey="CheckDLL" DllEntry="SetCompanyUniqueIdAction" Impersonate="no" Execute="deferred" />
+    <CustomAction Id="BeforeUninstallAction" BinaryKey="CheckDLL" DllEntry="BeforeUninstallAction"  Impersonate="no" Execute="deferred"/>
+	
+	  
+  </Product>
+  <Fragment>
+    <Directory Id="TARGETDIR" Name="SourceDir">
+      <Directory Id="ProgramFilesFolder">
+        <Directory Id="INSTALLFOLDER" Name="$(var.ProductName)" >
+        </Directory>
+      </Directory>
+    </Directory>
+  </Fragment>
+
+  <Fragment>
+    <ComponentGroup Id="ProductComponents">
+      <Component Id="ProductComponent" Directory="INSTALLFOLDER" Guid="CA7C1399-95F0-4AC0-8B4B-DF8A9354C8E9">
+        <RemoveFolder Id="RemoveThisFolder" On="uninstall" />
+        <File Id="samstarterservice.exe" Name="samstarterservice.exe" Source="..\SWI.SoftStock.Client.WindowsService\bin\$(var.Configuration)\samstarterservice.exe" Vital="yes" KeyPath="yes" DiskId="1"/>
+        <File Id="SWI.SoftStock.Client.Facades.dll" Name="SWI.SoftStock.Client.Facades.dll" Source="..\SWI.SoftStock.Client.WindowsService\bin\$(var.Configuration)\SWI.SoftStock.Client.Facades.dll" Vital="yes" KeyPath="no" DiskId="1"/>
+        <File Id="SWI.SoftStock.Client.ProcessWatchers.dll" Name="SWI.SoftStock.Client.ProcessWatchers.dll" Source="..\SWI.SoftStock.Client.WindowsService\bin\$(var.Configuration)\SWI.SoftStock.Client.ProcessWatchers.dll" Vital="yes" KeyPath="no" DiskId="1"/>
+        <File Id="SWI.SoftStock.Client.Repositories.dll" Name="SWI.SoftStock.Client.Repositories.dll" Source="..\SWI.SoftStock.Client.WindowsService\bin\$(var.Configuration)\SWI.SoftStock.Client.Repositories.dll" Vital="yes" KeyPath="no" DiskId="1"/>
+        <File Id="SWI.SoftStock.Client.Storages.dll" Name="SWI.SoftStock.Client.Storages.dll" Source="..\SWI.SoftStock.Client.WindowsService\bin\$(var.Configuration)\SWI.SoftStock.Client.Storages.dll" Vital="yes" KeyPath="no" DiskId="1"/>
+        <File Id="Newtonsoft.Json.dll" Name="Newtonsoft.Json.dll" Source="..\SWI.SoftStock.Client.WindowsService\bin\$(var.Configuration)\Newtonsoft.Json.dll" Vital="yes" KeyPath="no" DiskId="1"/>
+        <File Id="SWI.SoftStock.Common.Dto.dll" Name="SWI.SoftStock.Common.Dto.dll" Source="..\SWI.SoftStock.Client.WindowsService\bin\$(var.Configuration)\SWI.SoftStock.Common.Dto.dll" Vital="yes" KeyPath="no" DiskId="1"/>
+        <File Id="SWI.SoftStock.Client.Common.dll" Name="SWI.SoftStock.Client.Common.dll" Source="..\SWI.SoftStock.Client.WindowsService\bin\$(var.Configuration)\SWI.SoftStock.Client.Common.dll" Vital="yes" KeyPath="no" DiskId="1"/>
+        <File Id="Microsoft.Practices.Unity.Interception.dll" Name="Microsoft.Practices.Unity.Interception.dll" Source="..\SWI.SoftStock.Client.WindowsService\bin\$(var.Configuration)\Microsoft.Practices.Unity.Interception.dll" Vital="yes" KeyPath="no" DiskId="1"/>
+        <File Id="SWI.SoftStock.Common.dll" Name="SWI.SoftStock.Common.dll" Source="..\SWI.SoftStock.Client.WindowsService\bin\$(var.Configuration)\SWI.SoftStock.Common.dll" Vital="yes" KeyPath="no" DiskId="1"/>
+        <File Id="SWI.SoftStock.ServerApps.ServiceContracts.dll" Name="SWI.SoftStock.ServerApps.ServiceContracts.dll" Source="..\SWI.SoftStock.Client.WindowsService\bin\$(var.Configuration)\SWI.SoftStock.ServerApps.ServiceContracts.dll" Vital="yes" KeyPath="no" DiskId="1"/>
+		    <File Id="SWI.SoftStock.Common.Attributes.dll" Name="SWI.SoftStock.Common.Attributes.dll" Source="..\SWI.SoftStock.Client.WindowsService\bin\$(var.Configuration)\SWI.SoftStock.Common.Attributes.dll" Vital="yes" KeyPath="no" DiskId="1"/>
+
+        <File Id="log4net.dll" Name="log4net.dll" Source="..\SWI.SoftStock.Client.WindowsService\bin\$(var.Configuration)\log4net.dll" Vital="yes" KeyPath="no" DiskId="1"/>
+
+        <File Id="samstarterservice.exe.config" Name="samstarterservice.exe.config" Source="..\SWI.SoftStock.Client.WindowsService\bin\$(var.Configuration)\samstarterservice.exe.config" Vital="yes" KeyPath="no" DiskId="1"/>
+        <File Id="log4net.config" Name="log4net.config" Source="..\SWI.SoftStock.Client.WindowsService\log4net.config" Vital="yes" KeyPath="no" DiskId="1"/>
+
+        <ServiceInstall
+                  Id="ServiceInstaller"
+                  Type="ownProcess"
+                  Vital="yes"
+                  Name="SamStarter service"
+                  DisplayName="SamStarter Service"
+                  Description="SamStarter agent. Version: $(var.Version)"
+                  Start="auto"
+                  Account="LocalSystem"
+                  ErrorControl="ignore"
+                  Interactive="no">
+          <ServiceDependency Id="winmgmt"/>
+          <ServiceConfig DelayedAutoStart="yes"
+                         OnInstall="yes"
+                                 OnReinstall="yes"
+                                 OnUninstall="no"
+                               />
+        </ServiceInstall>
+        <ServiceControl Id="StartService" Start="install" Stop="both" Remove="uninstall" Name="SamStarter service" Wait="yes" />
+      </Component>
+    </ComponentGroup>
+    <InstallExecuteSequence>
+	  <Custom Action='SetCompanyUniqueIdActionParams' Before='SetCompanyUniqueIdAction'></Custom>
+      <Custom Action='SetCompanyUniqueIdAction' Before='InstallServices'>NOT Installed</Custom>
+      <Custom Action='BeforeUninstallAction' After='InstallInitialize'>REMOVE="ALL" AND NOT UPGRADINGPRODUCTCODE</Custom>
+    </InstallExecuteSequence>
+
+  </Fragment>
+</Wix>

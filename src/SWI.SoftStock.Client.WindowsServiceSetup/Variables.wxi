@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Include>
+  <?define Manufacturer = "SWI" ?>
+  <?define ProductName = "SamStarter" ?>
+  <?define Title = "SamStarter" ?>
+  <?define ServiceAddress = "https://samstarter.com/agent/api/companies/check" ?>
+
+  <!--Windows Installer only uses the first 3 parts of the version in upgrade scenarios-->
+  <?define Version = "1.0.5.0" ?>
+</Include>
